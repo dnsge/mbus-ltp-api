@@ -56,9 +56,11 @@ func GetStopPredictions(stopID string, routeIDs []string) ([]BusPrediction, erro
 	} else if !ok {
 		// Bustime error occurred, take first error message
 		errorMessage := bErr[0].Message
-		if MessageIs(errorMessage, mNoArrivalTimes, mNoServiceScheduled, mNoParameterDataFound) {
+		if MessageIs(errorMessage, mNoArrivalTimes, mNoServiceScheduled) {
 			// Handle errors that aren't really errors
 			return []BusPrediction{}, nil
+		} else if MessageIs(errorMessage, mNoParameterDataFound) {
+			return nil, ErrParameterNotFound
 		}
 		return nil, fmt.Errorf("got bustime error: %s", errorMessage)
 	}
