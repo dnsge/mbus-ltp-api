@@ -38,6 +38,7 @@ func GetStopPredictions(stopID string, routeIDs []string) ([]BusPrediction, erro
 	args.Set("stpid", stopID)
 	args.Set("format", "json")
 	args.Set("locale", "en")
+	args.Set("tmres", "s") // Seconds time resolution
 	if routeIDs != nil {
 		args.Set("rt", strings.Join(routeIDs, ","))
 	}
