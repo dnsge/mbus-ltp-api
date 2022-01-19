@@ -28,7 +28,7 @@ type BusPrediction struct {
 	PredictionCountdown string `json:"prdctdn"` // Time in minutes until arrival
 }
 
-func GetStopPredictions(stopID string, routeIDs []string) ([]BusPrediction, error) {
+func (a *APIClient) GetStopPredictions(stopID string, routeIDs []string) ([]BusPrediction, error) {
 	req, err := http.NewRequest("GET", predictionsAPIURL, nil)
 	if err != nil {
 		return nil, err
@@ -45,9 +45,8 @@ func GetStopPredictions(stopID string, routeIDs []string) ([]BusPrediction, erro
 	req.URL.RawQuery = args.Encode()
 
 	req.Header.Set("Accept", "application/json")
-	prepareRequestWithV3Auth(req)
 
-	res, err := doApiRequest(req)
+	res, err := a.doApiRequest(req)
 	if err != nil {
 		return nil, err
 	}

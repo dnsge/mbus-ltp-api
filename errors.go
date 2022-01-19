@@ -10,7 +10,6 @@ const (
 
 var (
 	ErrParameterNotFound = errors.New("no data found for parameter")
-	ErrNoCloseStop       = errors.New("no close stop within threshold")
 )
 
 func MessageIs(message string, anyOf ...string) bool {

@@ -19,7 +19,7 @@ type Route struct {
 	Display string `json:"rtdd"`
 }
 
-func GetRoutes() ([]Route, error) {
+func (a *APIClient) GetRoutes() ([]Route, error) {
 	req, err := http.NewRequest("GET", routesAPIURL, nil)
 	if err != nil {
 		return nil, err
@@ -31,9 +31,8 @@ func GetRoutes() ([]Route, error) {
 	req.URL.RawQuery = args.Encode()
 
 	req.Header.Set("Accept", "application/json")
-	prepareRequestWithV3Auth(req)
 
-	res, err := doApiRequest(req)
+	res, err := a.doApiRequest(req)
 	if err != nil {
 		return nil, err
 	}

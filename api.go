@@ -9,15 +9,39 @@ import (
 	"time"
 )
 
-const (
-	userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36"
-)
+var DefaultClient = &http.Client{
+	Timeout: time.Second * 5,
+}
 
-var httpClient = &http.Client{
-	Transport:     nil,
-	CheckRedirect: nil,
-	Jar:           nil,
-	Timeout:       time.Second * 5,
+type Config struct {
+	// Client is the http.Client to use for requests. If nil, DefaultClient is used.
+	Client *http.Client
+
+	// Auth is an AuthApplier that prepares requests with the required authorization.
+	Auth AuthApplier
+
+	// UserAgent is an optional User-Agent header to set on requests.
+	UserAgent string
+}
+
+type APIClient struct {
+	client    *http.Client
+	auth      AuthApplier
+	userAgent string
+}
+
+// NewAPIClient returns an APIClient instance initialized with the provided Config.
+func NewAPIClient(config *Config) *APIClient {
+	client := config.Client
+	if client == nil {
+		client = DefaultClient
+	}
+
+	return &APIClient{
+		client:    client,
+		auth:      config.Auth,
+		userAgent: config.UserAgent,
+	}
 }
 
 type BustimeError struct {
@@ -30,9 +54,17 @@ type BustimeErrorMessage struct {
 	Message string `json:"msg"`
 }
 
-func doApiRequest(req *http.Request) (*http.Response, error) {
-	req.Header.Set("User-Agent", userAgent)
-	return httpClient.Do(req)
+// doApiRequest prepares a request with the User-Agent header and authorization
+// before executing the request.
+func (a *APIClient) doApiRequest(req *http.Request) (*http.Response, error) {
+	if a.userAgent != "" {
+		req.Header.Set("User-Agent", a.userAgent)
+	}
+	err := a.auth.ApplyAuth(req)
+	if err != nil {
+		return nil, err
+	}
+	return a.client.Do(req)
 }
 
 // checkApiResponse checks if a bustime-response error occurred.

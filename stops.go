@@ -19,15 +19,15 @@ type Stop struct {
 	Longitude float64 `json:"lon"`
 }
 
-func GetStops(routeID string) ([]Stop, error) {
-	directions, err := GetDirections(routeID)
+func (a *APIClient) GetStops(routeID string) ([]Stop, error) {
+	directions, err := a.GetDirections(routeID)
 	if err != nil {
 		return nil, err
 	}
 
 	var allStops []Stop
 	for _, direction := range directions {
-		stops, err := GetStopsInDirection(routeID, direction.ID)
+		stops, err := a.GetStopsInDirection(routeID, direction.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -38,7 +38,7 @@ func GetStops(routeID string) ([]Stop, error) {
 	return DeduplicateStops(allStops), nil
 }
 
-func GetStopsInDirection(routeID string, directionID string) ([]Stop, error) {
+func (a *APIClient) GetStopsInDirection(routeID string, directionID string) ([]Stop, error) {
 	req, err := http.NewRequest("GET", stopsAPIURL, nil)
 	if err != nil {
 		return nil, err
@@ -52,9 +52,8 @@ func GetStopsInDirection(routeID string, directionID string) ([]Stop, error) {
 	req.URL.RawQuery = args.Encode()
 
 	req.Header.Set("Accept", "application/json")
-	prepareRequestWithV3Auth(req)
 
-	res, err := doApiRequest(req)
+	res, err := a.doApiRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +91,7 @@ type Direction struct {
 	Name string `json:"name"`
 }
 
-func GetDirections(routeID string) ([]Direction, error) {
+func (a *APIClient) GetDirections(routeID string) ([]Direction, error) {
 	req, err := http.NewRequest("GET", directionsAPIURL, nil)
 	if err != nil {
 		return nil, err
@@ -105,9 +104,8 @@ func GetDirections(routeID string) ([]Direction, error) {
 	req.URL.RawQuery = args.Encode()
 
 	req.Header.Set("Accept", "application/json")
-	prepareRequestWithV3Auth(req)
 
-	res, err := doApiRequest(req)
+	res, err := a.doApiRequest(req)
 	if err != nil {
 		return nil, err
 	}
