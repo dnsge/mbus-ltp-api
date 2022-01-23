@@ -24,6 +24,16 @@ type Config struct {
 	UserAgent string
 }
 
+type Client interface {
+	GetStops(routeID string) ([]Stop, error)
+	GetStopsInDirection(routeID string, directionID string) ([]Stop, error)
+	GetDirections(routeID string) ([]Direction, error)
+	GetRoutes() ([]Route, error)
+	GetStopPredictions(stopID string, routeIDs []string) ([]BusPrediction, error)
+}
+
+var _ Client = &APIClient{}
+
 type APIClient struct {
 	client    *http.Client
 	auth      AuthApplier
