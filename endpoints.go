@@ -6,4 +6,5 @@ const (
 	directionsAPIURL  = v3BaseURL + "/getdirections"
 	predictionsAPIURL = v3BaseURL + "/getpredictions"
 	routesAPIURL      = v3BaseURL + "/getroutes"
+	rtpiURL           = v3BaseURL + "/getrtpidatafeeds"
 )

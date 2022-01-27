@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 )
@@ -35,6 +36,7 @@ type Client interface {
 var _ Client = &APIClient{}
 
 type APIClient struct {
+	DataFeed  string
 	client    *http.Client
 	auth      AuthApplier
 	userAgent string
@@ -48,6 +50,7 @@ func NewAPIClient(config *Config) *APIClient {
 	}
 
 	return &APIClient{
+		DataFeed:  "",
 		client:    client,
 		auth:      config.Auth,
 		userAgent: config.UserAgent,
@@ -90,6 +93,11 @@ func checkApiResponse(res *http.Response) (bool, []BustimeErrorMessage, error) {
 		return false, nil, err
 	}
 
+	repairs := repairJSONEncoding(data)
+	if repairs > 0 {
+		log.Printf("mbus-ltp-api: Repaired %d invalid \"\\-\" escape sequences\n", repairs)
+	}
+
 	// Close original body and replace with nop-closer copy
 	_ = res.Body.Close()
 	res.Body = io.NopCloser(bytes.NewBuffer(data))
@@ -104,4 +112,31 @@ func checkApiResponse(res *http.Response) (bool, []BustimeErrorMessage, error) {
 	}
 
 	return true, nil, nil
+}
+
+// repairJSONEncoding attempts to fix possible errors in the JSON encoding
+// in responses from the MBus API.
+//
+// Notably, the API has sent back the following response before:
+//
+//   {
+//     "bustime-response": {
+//       "error": [{
+//         "msg": "No RTPI Data Feed parameter provided \- rtpidatafeed parameter must be provided for a multifeed site"
+//       }]
+//     }
+//   }
+//
+// which contains the invalid escape sequence "\-". How? Why? Only God knows.
+// This function will replace the sequence with "--" instead.
+func repairJSONEncoding(data []byte) int {
+	repairs := 0
+	size := len(data)
+	for i := 0; i < size-1; i++ {
+		if data[i] == '\\' && data[i+1] == '-' {
+			data[i] = '-'
+			repairs++
+		}
+	}
+	return repairs
 }

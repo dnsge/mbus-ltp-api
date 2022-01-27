@@ -36,6 +36,9 @@ func (a *APIClient) GetStopPredictions(stopID string, routeIDs []string) ([]BusP
 
 	args := req.URL.Query()
 	args.Set("stpid", stopID)
+	if a.DataFeed != "" {
+		args.Set("rtpidatafeed", a.DataFeed)
+	}
 	args.Set("format", "json")
 	args.Set("locale", "en")
 	args.Set("tmres", "s") // Seconds time resolution
@@ -56,11 +59,11 @@ func (a *APIClient) GetStopPredictions(stopID string, routeIDs []string) ([]BusP
 	} else if !ok {
 		// Bustime error occurred, take first error message
 		errorMessage := bErr[0].Message
-		if MessageIs(errorMessage, mNoArrivalTimes, mNoServiceScheduled) {
+		if errorMessageIs(errorMessage, mNoArrivalTimes, mNoServiceScheduled) {
 			// Handle errors that aren't really errors
 			return []BusPrediction{}, nil
-		} else if MessageIs(errorMessage, mNoParameterDataFound) {
-			return nil, ErrParameterNotFound
+		} else if det := determineError(errorMessage); det != nil {
+			return nil, det
 		}
 		return nil, fmt.Errorf("got bustime error: %s", errorMessage)
 	}

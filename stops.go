@@ -47,6 +47,9 @@ func (a *APIClient) GetStopsInDirection(routeID string, directionID string) ([]S
 	args := req.URL.Query()
 	args.Set("rt", routeID)
 	args.Set("dir", directionID)
+	if a.DataFeed != "" {
+		args.Set("rtpidatafeed", a.DataFeed)
+	}
 	args.Set("format", "json")
 	args.Set("locale", "en")
 	req.URL.RawQuery = args.Encode()
@@ -63,8 +66,8 @@ func (a *APIClient) GetStopsInDirection(routeID string, directionID string) ([]S
 	} else if !ok {
 		// Bustime error occurred, take first error message
 		errorMessage := bErr[0].Message
-		if MessageIs(errorMessage, mNoParameterDataFound) {
-			return nil, ErrParameterNotFound
+		if det := determineError(errorMessage); det != nil {
+			return nil, det
 		}
 		return nil, fmt.Errorf("got bustime error: %s", errorMessage)
 	}
@@ -99,6 +102,9 @@ func (a *APIClient) GetDirections(routeID string) ([]Direction, error) {
 
 	args := req.URL.Query()
 	args.Set("rt", routeID)
+	if a.DataFeed != "" {
+		args.Set("rtpidatafeed", a.DataFeed)
+	}
 	args.Set("format", "json")
 	args.Set("locale", "en")
 	req.URL.RawQuery = args.Encode()
@@ -115,8 +121,8 @@ func (a *APIClient) GetDirections(routeID string) ([]Direction, error) {
 	} else if !ok {
 		// Bustime error occurred, take first error message
 		errorMessage := bErr[0].Message
-		if MessageIs(errorMessage, mNoParameterDataFound) {
-			return nil, ErrParameterNotFound
+		if det := determineError(errorMessage); det != nil {
+			return nil, det
 		}
 		return nil, fmt.Errorf("got bustime error: %s", errorMessage)
 	}

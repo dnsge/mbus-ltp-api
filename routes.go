@@ -26,6 +26,9 @@ func (a *APIClient) GetRoutes() ([]Route, error) {
 	}
 
 	args := req.URL.Query()
+	if a.DataFeed != "" {
+		args.Set("rtpidatafeed", a.DataFeed)
+	}
 	args.Set("format", "json")
 	args.Set("locale", "en")
 	req.URL.RawQuery = args.Encode()
